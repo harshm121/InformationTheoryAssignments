@@ -6,25 +6,10 @@ class Channel:
 		self.transitionProbability = p
 
 	def transmit(self, inp):
-		# x = np.random.uniform(low = 0.0, high = 1.0)
-		# # print x
-		# if(x<=self.transitionProbability):
-		# 	# if(inp==1):
-		# 	# 	return 0
-		# 	# else:
-		# 	# 	return 1
-		# 	return inp ^ 1
-
-		# else:
-		# 	return inp
 		x = np.random.binomial(1, self.transitionProbability, 1)
 		return inp^x
 
 	def transmitSeq(self, inp):
-		# out = []
-		# for i in range(len(inp)):
-		# 	out.append(self.transmit(inp[i]))
-		# return out
 		x = np.random.binomial(1, self.transitionProbability, len(inp))
 		return inp^x
 
@@ -63,14 +48,6 @@ class Channel:
 		return (1-Hp)
 
 def getInputSeq(px1, length):
-	# inp = []
-	# for i in range(length):
-	# 	x = np.random.uniform(low = 0.0, high = 1.0)
-	# 	if(x<=px1):
-	# 		inp.append(1)
-	# 	else:
-	# 		inp.append(0)
-	# return inp
 	return np.random.binomial(1, px1, length)
 
 def getEntropy(seq):
@@ -87,9 +64,6 @@ def getEntropy(seq):
 def jointTypicality(xn, yn, e, px1, p, Hx, Hxy, j):
 	n = len(xn)
 	sx = sum(xn)	
-	# pxn = [math.pow(px1, sx), math.pow((1-px1), n-sx)]
-	# pxnl = [-(math.log(pxn[i], 2))/n for i in range(2)]
-	# pxn = sum(pxnl)
 	pxn = (sx*math.log(px1, 2) + (n-sx)*math.log(1-px1, 2))/n
 	px = abs(-pxn - Hx)<e
 	if(not px):
@@ -97,22 +71,13 @@ def jointTypicality(xn, yn, e, px1, p, Hx, Hxy, j):
 
 	s = sum(([xn[i]==yn[i] for i in range(len(xn))])*1)
 
-	# pxnyn = [math.pow((1-p), s), math.pow(p, (n-s)), math.pow(px1, sx), math.pow((1-px1), (n-sx))]
-	# pxnynl = [-(math.log(pxnyn[i], 2))/n for i in range(4)]
-	# pxnyn = sum(pxnynl)
 	pxnyn = (s*math.log(1-p, 2) + (n-s)*math.log(p, 2) + sx*math.log(px1, 2) + (n-sx)*math.log(1-px1, 2))/n
 	pxy = abs(-pxnyn - Hxy) < e
-	# print abs(-(math.log(pxnyn, 2))/n - Hxy), e
-	# print ".",
-	# print j, pxnyn, Hxy
 	return pxy
 
 
 def decode(codeBook, yn, e, px1, py1, p, Hx, Hy, Hxy):
 	sy = sum(yn)
-	# pyn = [math.pow(py1, sum(yn)), math.pow((1-py1), n-sum(yn))]
-	# pynl = [-(math.log(pyn[i], 2))/n for i in range(2)]
-	# pyn = sum(pynl)
 	pyn = (sy*math.log(py1, 2) + (n-sy)*math.log(1-py1, 2))/n
 	py = abs(-pyn - Hy)<e
 	if(not py):
@@ -144,7 +109,6 @@ px1 = 0.6
 py1 = px1*(1-channel.transitionProbability) + (1-px1)*channel.transitionProbability
 p = channel.transitionProbability
 eList = [0.005, 0.01, 0.015, 0.02]
-# eList = [0.009, 0.0095, 0.01]
 Hx = -px1*math.log(px1, 2) - (1-px1)*math.log((1-px1), 2)
 Hy = -py1*math.log(py1, 2) - (1-py1)*math.log((1-py1), 2)
 Hygivenx0 = -p*math.log(p, 2) - (1-p)*math.log(1-p, 2)
@@ -153,7 +117,8 @@ Hygivenx = px1*Hygivenx1 + (1-px1)*Hygivenx0
 Hxy = Hx + Hygivenx
 
 for e in eList:
-	probOfError = []
+	probOfError1 = []
+	probOfError2 = []
 	for n in nList:
 		print "n = ", n
 		codeBook = []
@@ -176,14 +141,37 @@ for e in eList:
 			ihat = decode(codeBook, output[i], e, px1, py1, p, Hx, Hy, Hxy)
 			if(ihat == i):
 				corr +=1
-		probOfError.append(1-(corr+0.)/len(output))	
+		probOfError1.append(1-(corr+0.)/len(output))	
 		print "		Output decoded"
+	for n in nList:
+		print "n = ", n
+		codeBook = []
+		for i in range (int(math.ceil(math.pow(2, n*R)))):
+			codeBook.append(getInputSeq(px1, n))
+		print len(codeBook)
+		output = []
+
+		for i in range(len(codeBook)):
+			output.append(channel.transmitSeq(codeBook[i]))
+		print "		output recieved"
+
+
+		corr = 0
+		corrpy = 0
+		corrjt = 0
+		for i in range(len(output)):
+			if((i+1)%200==0):
+				print "		", i+1 ," decoded"
+			ihat = decode(codeBook, output[i], e, px1, py1, p, Hx, Hy, Hxy)
+			if(ihat == i):
+				corr +=1
+		probOfError2.append(1-(corr+0.)/len(output))	
+		print "		Output decoded"
+	probOfError = [(probOfError1[u] + probOfError2[u])/2 for u in range(len(probOfError1))]
 	print e
 	print nList
 	print probOfError
 	plt.plot(nList, probOfError)
-# plt.ylabel("Pe")
-# plt.xlabel("n")
 plt.ylabel("P(error)")
 plt.xlabel("n")
 plt.legend(["e = "+str(eList[0]), "e = "+str(eList[1]), "e = "+str(eList[2]), "e = "+str(eList[3])])#, "e = "+str(eList[4]), "e = "+str(eList[5])])
