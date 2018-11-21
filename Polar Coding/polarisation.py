@@ -1,4 +1,8 @@
-from matplotlib import pyplot as plt
+class Polarize:
+	def __init__(self, alpha):
+		self.alpha = alpha
+		
+# from matplotlib import pyplot as plt
 I = []
 alpha = 0.7
 I.append(1 - alpha)
@@ -44,11 +48,11 @@ for n in range(1, 31):
 # plt.savefig("./figures/thisIsNiceBar.jpg")
 
 
-for i in range(len(Ilist)):
-	x = range(1, len(Ilist[i])+1)
-	y = Ilist[i]
-	plt.figure(figsize=(22,22))
-	plt.scatter(x, y, c='r', marker= '*')
-	plt.savefig('./figures/'+str(i+1)+'.png')
-	plt.clf()
-	
+# for i in range(len(Ilist)):
+# 	x = range(1, len(Ilist[i])+1)
+# 	y = Ilist[i]
+# 	plt.figure(figsize=(22,22))
+# 	plt.scatter(x, y, c='r', marker= '*')
+# 	plt.savefig('./figures/'+str(i+1)+'.png')
+# 	plt.clf()
+# 	
